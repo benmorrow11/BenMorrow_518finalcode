@@ -1,0 +1,486 @@
+
+
+install.packages("rgdal")
+install.packages("tidyverse")
+install.packages("grid")
+install.packages("gridExtra")
+install.packages("gtable")
+install.packages("maps")
+install.packages("bcmaps")
+install.packages("lubridate")
+install.packages("tmap")
+install.packages("fBasics")
+install.packages('bcmapsdata', repos='https://bcgov.github.io/drat/')
+install.packages("raster")
+install.packages("ggplot2")
+install.packages("rgeos")
+install.packages("mapview")
+install.packages("leaflet")
+install.packages("trajr")
+install.packages("sp")
+install.packages("sf")
+install.packages("GISTools")
+install.packages("spatstat")
+install.packages("plyr")
+install.packages("maptools")
+install.packages("gstat")
+install.packages("automap")
+install.packages("expss")
+install.packages("tmaptools")
+install.packages("clusteval")
+install.packages("ade4")
+install.packages("remotes")
+remotes::install_github("ramhiser/clusteval")
+install.packages("clusteval")
+
+
+library("rgdal")
+library("tidyverse")
+library("gridExtra")
+library("maps")
+library("bcmaps")
+library("lubridate")
+library("tmap")
+library("gtable")
+library("grid")
+library("bcmapsdata")
+library("fBasics")
+library("bcmapsdata")
+library("raster")
+library("ggplot2")
+library("rgeos")
+library("mapview")
+library("leaflet")
+library("trajr")
+library("sp")
+library("sf")
+library("GISTools")
+library("spatstat")
+library("plyr")
+library("maptools")
+library("gstat")
+library("automap")
+library("expss")
+library("tmaptools")
+library("clusteval")
+library("ade4")
+library("zonator")
+library("remotes")
+remotes::install_github("ramhiser/clusteval")
+library("clusteval")
+
+
+dir <- "F:/Ben_M/518/Final_proj"
+setwd(dir)
+getwd()
+
+#Cleaning Data######################################################################################################
+
+AISdf <- read.csv("TAIS_m123_201806.csv")
+
+Coords <- AISdf[,c("longitude", "latitude")]
+crs <- CRS("+init=epsg:4326")
+AISpoints <- SpatialPointsDataFrame(coords = Coords , data = AISdf , proj4string =crs )
+AISpoints <- spTransform(AISpoints, CRS("+init=epsg:3005"))
+  
+#subsetdf <- AISdf[c(1:2503), c(1:9)]                    ##(12am-1am, June 1)
+#subsetdf2 <- AISdf[c(24315:26439), c(1:9)]              ##(12pm-1pm, June 1)
+#subsetdf3 <- AISdf[c(782236:783868), c(1:9)]            ##(12am-1am, June 14)
+#subsetdf4 <- AISdf[c(799924:801832), c(1:9)]            ##(12pm-1pm, June 14)
+
+#Descriptive statistics for speed should compare all##############################################################################
+#################################################################################################################3
+
+subsetdf <- AISdf[c(1:2503), c(1:9)]                    ##(12am-1am, June 1)
+subsetdf2 <- AISdf[c(24315:26439), c(1:9)]              ##(12pm-1pm, June 1)
+subsetdf3 <- AISdf[c(782236:783868), c(1:9)]            ##(12am-1am, June 14)
+subsetdf4 <- AISdf[c(799924:801832), c(1:9)]            ##(12pm-1pm, June 14)
+
+
+Coordssubset <- subsetdf[,c("longitude", "latitude")]
+Coordssubset2 <- subsetdf2[,c("longitude", "latitude")]
+Coordssubset3 <- subsetdf3[,c("longitude", "latitude")]
+Coordssubset4 <- subsetdf4[,c("longitude", "latitude")]
+crs <- CRS("+init=epsg:4326")
+
+subsetAIS <- SpatialPointsDataFrame(coords = Coordssubset , data = subsetdf, proj4string =crs )
+subsetAIS2 <- SpatialPointsDataFrame(coords = Coordssubset2 , data = subsetdf2, proj4string =crs )
+subsetAIS3 <- SpatialPointsDataFrame(coords = Coordssubset3 , data = subsetdf3, proj4string =crs )
+subsetAIS4 <- SpatialPointsDataFrame(coords = Coordssubset4 , data = subsetdf4, proj4string =crs )
+subsetAIS <- spTransform(subsetAIS, CRS("+init=epsg:3005"))
+subsetAIS2 <- spTransform(subsetAIS2, CRS("+init=epsg:3005"))
+subsetAIS3 <- spTransform(subsetAIS3, CRS("+init=epsg:3005"))
+subsetAIS4 <- spTransform(subsetAIS4, CRS("+init=epsg:3005"))
+
+#Repeat for all 4 analyses
+
+subsetAIS <- SpatialPointsDataFrame(coords = Coordssubset , data = subsetdf, proj4string =crs )
+subsetAIS <- spTransform(subsetAIS, CRS("+init=epsg:3005"))
+
+extent(subsetAIS)
+
+writeOGR(subsetAIS, ".","subsetAIS2", "ESRI Shapefile")
+subsetAISshp <- readOGR(dsn = ".", layer= "subsetAIS2")
+extent(subsetAISshp)
+
+plot(subsetAIS)
+
+#Descriptive stats
+
+#Mean Speed
+meanSOG <- mean(subsetdf$sog, na.rm = TRUE) 
+meanSOG2 <- mean(subsetdf2$sog, na.rm = TRUE) 
+meanSOG3 <- mean(subsetdf3$sog, na.rm = TRUE) 
+meanSOG4 <- mean(subsetdf4$sog, na.rm = TRUE) 
+#Standard Deviation
+sdSOG <- sd(subsetdf$sog, na.rm = TRUE)
+sdSOG2 <- sd(subsetdf2$sog, na.rm = TRUE)
+sdSOG3 <- sd(subsetdf3$sog, na.rm = TRUE)
+sdSOG4 <- sd(subsetdf4$sog, na.rm = TRUE) 
+#Mode
+modeSOG <- as.numeric(names(sort(table(subsetdf$sog), decreasing = TRUE))[1])
+modeSOG2 <- as.numeric(names(sort(table(subsetdf2$sog), decreasing = TRUE))[1])
+modeSOG3 <- as.numeric(names(sort(table(subsetdf3$sog), decreasing = TRUE))[1])
+modeSOG4 <- as.numeric(names(sort(table(subsetdf4$sog), decreasing = TRUE))[1]) 
+#median
+medSOG <- median(subsetdf$sog, na.rm = TRUE)
+medSOG2 <- median(subsetdf2$sog, na.rm = TRUE)
+medSOG3 <- median(subsetdf3$sog, na.rm = TRUE)
+medSOG4 <- median(subsetdf4$sog, na.rm = TRUE)
+#Skewness
+skewSOG <- skewness(subsetdf$sog, na.rm = TRUE)[1]
+skewSOG2 <- skewness(subsetdf2$sog, na.rm = TRUE)[1]
+skewSOG3 <- skewness(subsetdf3$sog, na.rm = TRUE)[1]
+skewSOG4 <- skewness(subsetdf4$sog, na.rm = TRUE)[1]
+#Kurtosis
+kurtSOG <- kurtosis(subsetdf$sog, na.rm = TRUE)[1]
+kurtSOG2 <- kurtosis(subsetdf2$sog, na.rm = TRUE)[1]
+kurtSOG3 <- kurtosis(subsetdf3$sog, na.rm = TRUE)[1]
+kurtSOG4 <- kurtosis(subsetdf4$sog, na.rm = TRUE)[1]
+#CoV
+CoVSOG <- (sdSOG / meanSOG) * 100
+CoVSOG2 <- (sdSOG2 / meanSOG2) * 100
+CoVSOG3 <- (sdSOG3 / meanSOG3) * 100
+CoVSOG4 <- (sdSOG4 / meanSOG4) * 100
+#Normal distribution test
+normSOG_PVAL <- shapiro.test(subsetdf$sog)$p.value
+normSOG_PVAL2 <- shapiro.test(subsetdf2$sog)$p.value
+normSOG_PVAL3 <- shapiro.test(subsetdf3$sog)$p.value
+normSOG_PVAL4 <- shapiro.test(subsetdf4$sog)$p.value
+
+#Create a table of descriptive stats
+
+Samples = c("Speed") #Create an object for the labels
+Mean_Speed  = c(meanSOG, meanSOG2, meanSOG3, meanSOG4) #Create an object for the means
+Standard_Deviation = c(sdSOG, sdSOG2, sdSOG3, sdSOG4) #Create an object for the standard deviations
+Median_Speed = c(medSOG, medSOG2, medSOG3, medSOG4) #Create an object for the medians
+Mode_Speed <- c(modeSOG, modeSOG2, modeSOG3, modeSOG4) #Create an object for the modes
+Skewness <- c(skewSOG, skewSOG2, skewSOG3, skewSOG4) #Create an object for the skewness
+Kurtosis <- c(kurtSOG, kurtSOG2, kurtSOG3, kurtSOG4) #Create an object for the kurtosis
+CoV <- c(CoVSOG, CoVSOG2, CoVSOG3, CoVSOG4)
+Normality <- c(normSOG_PVAL, normSOG_PVAL2, normSOG_PVAL3, normSOG_PVAL4) 
+
+data.for.table1 = data.frame(Samples, Mean_Speed, Standard_Deviation, Median_Speed, 
+                             Mode_Speed, Skewness, Kurtosis, CoV, Normality)
+
+data.for.table1
+
+table1 <- tableGrob(data.for.table1, rows = c("","", "", "")) 
+t1Caption <- textGrob("Table 1: Summary Statistics", gp = gpar(fontsize = 09))
+padding <- unit(5, "mm")
+
+table1 <- gtable_add_rows(table1, 
+                          heights = grobHeight(t1Caption) + padding, 
+                          pos = 0)
+
+table1 <- gtable_add_grob(table1,
+                          t1Caption, t = 1, l = 2, r = ncol(data.for.table1) + 1)
+
+
+grid.arrange(table1, newpage = TRUE)
+
+
+png("Output_Table1.png") 
+grid.arrange(table1, newpage = TRUE)
+dev.off() 
+
+
+#Study area##################################################################################################################
+
+shp <- readOGR(dsn = ".", layer= "SalishSea_Inside_FINAL")
+areadf <- shp@data
+shp <- spTransform(shp, CRS("+init=epsg:3005"))
+extent(shp)
+plot(shp)
+
+palette_explorer()
+
+#View mode
+map_AIS <-  tmap_mode("view") +
+  tm_shape(shp) + tm_polygons() +
+  tm_scale_bar(position=c("left", "bottom")) +
+  tm_compass(position=c("left", "bottom"))
+
+map_AIS
+
+#AIS MAP
+map_AISarea <- tm_shape(shp) + 
+  tm_polygons(palette= "Blues", n=3) + 
+  tm_shape(subsetAIS) +
+  tm_symbols(col = "red", size = 0.008) +
+  tm_layout(main.title = "AIS locations 01/06/2019 \n(12am-1am PDT)", main.title.size= 0.8) +
+  tm_scale_bar(position=c("left", "bottom")) +
+  tm_compass(position=c("left", "bottom")) 
+
+map_AISarea
+
+###############################################################################################################3
+############Prep for analysis######################################################################################################
+
+kma <- subsetAIS
+
+kma$x <- coordinates(kma)[,1]  
+kma$y <- coordinates(kma)[,2]
+
+zd <- zerodist(kma)
+zd
+
+kma <- remove.duplicates(kma)
+
+kma.ext <- as.matrix(extent(kma))  
+
+window <- as.owin(list(xrange = kma.ext[1,], yrange = kma.ext[2,]))
+
+kma.ppp <- ppp(x = kma$x, y = kma$y, window = window)
+
+#####KDE##########################################################################################################
+########################################################################################################################3
+
+bw.d <- bw.diggle(kma.ppp)
+plot(bw.d, main= "Cross-validated KDE")
+
+bw.d
+summary(bw.d)
+
+kde.bwo <- as(density(kma.ppp, bw = bw.d, at = "pixels", eps = c(500, 500)), "SpatialGridDataFrame") 
+plot(kde.bwo, main = "Cross-Val KDE") 
+  plot(shp, add= TRUE, border = "black")
+
+kde.bwo
+
+#IDW#########################################################################################################
+
+grd <- as.data.frame(spsample(subsetAIS, "regular", n=50000))
+names(grd)       <- c("X", "Y")
+coordinates(grd) <- c("X", "Y")
+gridded(grd)     <- TRUE 
+fullgrid(grd)    <- TRUE 
+
+proj4string(grd) <- proj4string(subsetAIS)
+P.idw <- gstat::idw(sog ~ 1, subsetAIS, newdata=grd, idp=3.0)
+r       <- raster(P.idw)
+
+plot(r)
+
+r <- raster(P.idw)
+r.m <- mask(r, shp)
+
+tm_shape(r.m) + 
+  tm_raster(n=8,palette = "-RdBu",
+            title="Speed Over Ground (1/10kt)") + 
+  tm_shape(subsetAIS) + tm_dots(size=0.0002) +
+  tm_legend(legend.outside=TRUE) +
+  tm_compass()+
+tm_scale_bar()
+
+
+###########################################################################################################
+# Leave-one-out validation routine
+IDW.out <- vector(length = length(subsetAIS))
+for (i in 1:length(subsetAIS)) {
+  IDW.out[i] <- gstat::idw(sog ~ 1, subsetAIS[-i,], subsetAIS[i,], idp=3.0)$var1.pred
+}
+
+OP <- par(pty="s", mar=c(4,3,0,0))
+plot(IDW.out ~ subsetAIS$sog, asp=1, xlab="Observed", ylab="Predicted", pch=16,
+     col=rgb(0,0,0,0.5))
+abline(lm(IDW.out ~ subsetAIS$sog), col="red", lw=2,lty=2)
+abline(0,1)
+
+par(OP)
+sqrt( sum((IDW.out - subsetAIS$sog)^2) / length(subsetAIS))
+
+img <- gstat::idw(sog~1, subsetAIS, newdata=grd, idp=3.0)
+n   <- length(subsetAIS)
+Zi  <- matrix(nrow = length(img$var1.pred), ncol = n)
+
+#Jackknife loop
+S1 <- Sys.time()
+st <- stack()
+for (i in 1:10){
+  Z1 <- gstat::idw(sog~1, subsetAIS[-i,], newdata=grd, idp=3.0)
+  st <- addLayer(st,raster(Z1,layer=1))
+  Zi[,i] <- n * img$var1.pred - (n-1) * Z1$var1.pred
+}
+s2 <- Sys.time()
+s2 - S1      
+
+writeRaster(variablenameraster, filename = "IDW_sog", format = "GTiff")
+
+
+Zj <- as.matrix(apply(Zi, 1, sum, na.rm=T) / n )
+
+c1 <- apply(Zi,2,'-',Zj)            
+c1 <- apply(c1^2, 1, sum, na.rm=T ) 
+
+CI <- sqrt( 1/(n*(n-1)) * c1)
+
+img.sig   <- img
+img.sig$v <- CI /img$var1.pred
+
+r <- raster(img.sig, layer="v")
+r.m <- mask(r, shp)
+
+tm_shape(r.m) + tm_raster(n=7,title="95% confidence interval \n(1/10kt)") +
+  tm_shape(subsetAIS) + tm_dots(size=0.2) +
+  tm_legend(legend.outside=TRUE)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+#KRIGING###################################################################################################
+########################################DIDN'T WORK DUE TO SIZE OF DATASET################################
+
+f.0 <- as.formula(sog ~ 1) 
+
+var.smpl <- variogram(f.0, subsetAIS, cloud = FALSE) 
+dat.fit  <- fit.variogram(var.smpl, fit.ranges = FALSE, fit.sills = FALSE,
+                          vgm(model="Sph"))
+dat.fit
+
+plot(var.smpl, dat.fit)
+
+dat.krg <- krige(f.0, subsetAIS, grd, dat.fit)
+
+r <- raster(dat.krg)
+r.m <- mask(r, shp)
+
+tm_shape(r) + 
+  tm_raster(n=7, palette="RdBu",  
+            title="Speed over Ground \n(1/10kt)") +
+  tm_shape(subsetAIS) + tm_dots(size=0.0002) +
+  tm_legend(legend.outside=TRUE) +
+  tm_scale_bar(position = c("left", "bottom")) +
+  tm_compass(position = c("left", "bottom"))
+
+#Variance
+r   <- raster(dat.krg, layer="var1.var")
+r.m <- mask(r, shp)
+
+tm_shape(r) + 
+  tm_raster(n=7, palette ="Reds",
+            title="Variance map \n(1/10kt)") +tm_shape(subsetAIS) + tm_dots(size=0.0002) +
+  tm_legend(legend.outside=TRUE) +
+  tm_scale_bar(position = c("left", "bottom")) +
+  tm_compass(position = c("left", "bottom"))
+
+#Confidence intervals
+r   <- sqrt(raster(dat.krg, layer="var1.var")) * 1.96
+r.m <- mask(r, shp)
+
+tm_shape(r) + 
+  tm_raster(n=7, palette ="Reds",
+            title="95% CI map \n(1/10kt)") +tm_shape(subsetAIS) + tm_dots(size=0.0002) +
+  tm_legend(legend.outside=TRUE) +
+  tm_scale_bar(position = c("left", "bottom")) +
+  tm_compass(position = c("left", "bottom"))
+
+
+####Comparing IDW to KDE####################################################################################################
+#Didn't work#######################################################################################################
+
+
+kderast <- raster(kde.bwo)
+kderast2 <- mask(r, shp)
+
+outputRaster <- overlay(kderast2, r, fun=function(r1, r2){return(r1-r2)})
+
+
+jaccard <- function(raster1, raster2, threshhold, warn.uneven=TRUE) {
+  
+  # Get the values above the threshhold
+  raster1.bin <- raster1 >= threshhold
+  raster2.bin <- raster2 >= threshhold
+  
+  if (warn.uneven) {
+    raster1.size <- count(raster1.bin, 1)
+    raster2.size <- count(raster2.bin, 1)
+    # Sort from smaller to larger
+    sizes <- sort(c(raster1.size, raster2.size))
+    if (sizes[2] / sizes[1] > 20) {
+      warning("The extents of raster values above the threshhold differ more than 20-fold: Jaccard coefficient may not be informative.")
+    }
+  }
+  
+  # Calculate the intersection of the two rasters, this is given by adding 
+  # the binary rasters together -> 2 indicates intersection
+  combination <- raster1.bin + raster2.bin
+  intersection <- combination == 2
+  
+  # Union is all the area covered by the both rasters
+  union <- combination >= 1
+  
+  return(count(intersection, 1) / count(union, 1))
+}
+
+
+jaccard(kderast2, r, threshhold = (50000), warn.uneven= TRUE)
+
+mantel.rtest(kderast2, r, nrepet = 9999)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
